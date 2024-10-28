@@ -26,8 +26,7 @@ class MysqlEs:
             connection_settings=MYSQL_SETTINGS,
             server_id=3,
             blocking=True,
-            resume_stream=True,
-            only_events=[DeleteRowsEvent, WriteRowsEvent, UpdateRowsEvent],
+            only_events=[DeleteRowsEvent, WriteRowsEvent, UpdateRowsEvent, XidEvent],
         )
     def mysql_connection(self):
         try:
@@ -77,81 +76,43 @@ class MysqlEs:
     def get_event(self):
         extracted_collection = []
         for event in self.logStream:
-            event.dump()
-            extracted_collection.extend(self.event_to_es(event))
-            if(len(extracted_collection) >= 6):
-                print(extracted_collection)
-                self.send_to_es(extracted_collection)
-                extracted_collection = []
+            if isinstance(event, XidEvent):
+                continue
+            for row in event.rows:
+                if(event.schema == "product"):
+                    if("id" in row["values"]):
+                        if isinstance(event, WriteRowsEvent):
+                            extracted = {
+                                "_op_type": "index",
+                                "_index": event.table,
+                                "_source": row["values"]
+                            }
+                            print(row['values'])
+                        elif isinstance(event, UpdateRowsEvent):
+                            extracted = {
+                                "_op_type": "update",
+                                "_index": event.table,
+                                "_id": row["after-values"]["id"],
+                                "doc": row["after-values"]
+                            }
+                            print(row['values'])
+                        if isinstance(event, DeleteRowsEvent):
+                            extracted = {
+                                "_op_type": "delete",
+                                "_index": event.table,
+                                "_id": row["values"]["id"]
+                            }
+                            print(row['values'])
+                        extracted_collection.append(extracted)
         self.logStream.close()
         print('Info: Mysql connection closed successfully after reading all binlog events.')
         return extracted_collection
 
-    def event_to_es(self, event):
-        rows = []
-        for row in event.rows:
-            if (event.schema == "product"):
-                if ("id" in row["values"]):
-                    if isinstance(event, WriteRowsEvent):
-                        extracted = [
-                            {"index": {"_index": event.table, "_id": row["values"]["id"]}}
-                        ]
-                        extracted.append(row["values"])
-                        print(row['values'])
-                    elif isinstance(event, UpdateRowsEvent):
-                        extracted = [
-                            {"update": {"_index": event.table, "_id": row["values"]["id"]}}
-                        ]
-                        extracted.append(
-                            {
-                               "doc": row["values"]
-                            }
-                        )
-                    if isinstance(event, DeleteRowsEvent):
-                        extracted = {"delete": {"_index": event.table, "_id": row["values"]["id"]}},
-                        print(row['values'])
-                    rows.extend(extracted)
-        return rows
-    def send_to_es(self, data):
 
-        data2 = [
-            {"create": {"_index": "product", "_id": 3030}},
-            {
-                "id":"1726",
-                "productName": "3123",
-                "productCode": "asu3s",
-                "productStatusFK": 1,
-                "active": 0,
-                "updatedAt": datetime.datetime(2000,1,1)
-            },
-            {"create": {"_index": "product", "_id": 3031}},
-            {
-                "id": "1726",
-                "productName": "3123",
-                "productCode": "asu3s",
-                "productStatusFK": 1,
-                "active": 0,
-                "updatedAt": datetime.datetime(2000,1,1)
-            },
-            {"create": {"_index": "product", "_id": 3032}},
-            {
-                "id": "1726",
-                "productName": "31sss23",
-                "productCode": "asssu3s",
-                "productStatusFK": 1,
-                "active": 0,
-                "updatedAt": datetime.datetime(2000,1,1)
-            }
-        ]
+    def send_to_es(self, json):
+        helpers.bulk(self.es, json)
+        print("success")
 
-        # self.es.indices.delete(index='product', ignore_unavailable=True)
-        # self.es.indices.create(index='product')
-        response =self.es.bulk(
-            operations=data2
-        )
-
-        print(response.body)
-        print(self.es.count(index='product'))
 
 @app.route('/')
 def index():

@@ -6,6 +6,8 @@
 -- Üretim Zamanı: 05 Tem 2023, 20:17:10
 -- Sunucu sürümü: 10.4.20-MariaDB
 -- PHP Sürümü: 8.0.9
+SET GLOBAL BINLOG_ROW_METADATA = 'FULL';
+SET GLOBAL BINLOG_ROW_IMAGE = 'FULL';
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -29,7 +31,7 @@ SET time_zone = "+00:00";
 use product;
 
 CREATE TABLE `product` (
-  `productPK` int(11) NOT NULL,
+  `id` int(11) NOT NULL,
   `productName` varchar(255) NOT NULL,
   `productCode` varchar(255) NOT NULL,
   `productStatusFK` int(11) NOT NULL DEFAULT 1,
@@ -41,7 +43,7 @@ CREATE TABLE `product` (
 -- Tablo döküm verisi `product`
 --
 
-INSERT INTO `product` (`productPK`, `productName`, `productCode`, `productStatusFK`, `active`, `updatedAt`) VALUES
+INSERT INTO `product` (`id`, `productName`, `productCode`, `productStatusFK`, `active`, `updatedAt`) VALUES
 (1, 'logitech', 'logitech', 1, 1, '2023-07-05 01:00:00'),
 (2, 'asus', 'asus', 1, 0, '2023-07-04 01:00:00'),
 (3, 'apple', 'apple', 1, 0, '2023-07-03 01:00:00'),
@@ -55,7 +57,7 @@ INSERT INTO `product` (`productPK`, `productName`, `productCode`, `productStatus
 -- Tablo için indeksler `product`
 --
 ALTER TABLE `product`
-  ADD PRIMARY KEY (`productPK`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Dökümü yapılmış tablolar için AUTO_INCREMENT değeri
@@ -65,7 +67,7 @@ ALTER TABLE `product`
 -- Tablo için AUTO_INCREMENT değeri `product`
 --
 ALTER TABLE `product`
-  MODIFY `productPK` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
