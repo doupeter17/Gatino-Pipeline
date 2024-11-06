@@ -79,10 +79,10 @@ class MysqlEs:
         for event in self.logStream:
             event.dump()
             extracted_collection.extend(self.event_to_es(event))
-            if(len(extracted_collection) >= 6):
-                print(extracted_collection)
-                self.send_to_es(extracted_collection)
-                extracted_collection = []
+            # if(len(extracted_collection) >= 6):
+            print(extracted_collection)
+            self.send_to_es(extracted_collection)
+            extracted_collection = []
         self.logStream.close()
         print('Info: Mysql connection closed successfully after reading all binlog events.')
         return extracted_collection
@@ -114,40 +114,40 @@ class MysqlEs:
         return rows
     def send_to_es(self, data):
 
-        data2 = [
-            {"create": {"_index": "product", "_id": 3030}},
-            {
-                "id":"1726",
-                "productName": "3123",
-                "productCode": "asu3s",
-                "productStatusFK": 1,
-                "active": 0,
-                "updatedAt": datetime.datetime(2000,1,1)
-            },
-            {"create": {"_index": "product", "_id": 3031}},
-            {
-                "id": "1726",
-                "productName": "3123",
-                "productCode": "asu3s",
-                "productStatusFK": 1,
-                "active": 0,
-                "updatedAt": datetime.datetime(2000,1,1)
-            },
-            {"create": {"_index": "product", "_id": 3032}},
-            {
-                "id": "1726",
-                "productName": "31sss23",
-                "productCode": "asssu3s",
-                "productStatusFK": 1,
-                "active": 0,
-                "updatedAt": datetime.datetime(2000,1,1)
-            }
-        ]
+        # data2 = [
+        #     {"create": {"_index": "product", "_id": 3030}},
+        #     {
+        #         "id":"1726",
+        #         "productName": "3123",
+        #         "productCode": "asu3s",
+        #         "productStatusFK": 1,
+        #         "active": 0,
+        #         "updatedAt": datetime.datetime(2000,1,1)
+        #     },
+        #     {"create": {"_index": "product", "_id": 3031}},
+        #     {
+        #         "id": "1726",
+        #         "productName": "3123",
+        #         "productCode": "asu3s",
+        #         "productStatusFK": 1,
+        #         "active": 0,
+        #         "updatedAt": datetime.datetime(2000,1,1)
+        #     },
+        #     {"create": {"_index": "product", "_id": 3032}},
+        #     {
+        #         "id": "1726",
+        #         "productName": "31sss23",
+        #         "productCode": "asssu3s",
+        #         "productStatusFK": 1,
+        #         "active": 0,
+        #         "updatedAt": datetime.datetime(2000,1,1)
+        #     }
+        # ]
 
         # self.es.indices.delete(index='product', ignore_unavailable=True)
         # self.es.indices.create(index='product')
         response =self.es.bulk(
-            operations=data2
+            operations=data
         )
 
         print(response.body)
